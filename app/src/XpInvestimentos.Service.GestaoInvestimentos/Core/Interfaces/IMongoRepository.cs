@@ -1,16 +1,20 @@
 using System.Linq.Expressions;
+using Core.Contracts;
+using Core.Errors;
 using MongoDB.Driver;
 
 namespace Core.Interfaces
 {
     public interface IMongoRepository
     {
-        IEnumerable<TEntity> QueryAsync<TEntity>() where TEntity : MongoDocument;
+        Either<Error, IEnumerable<TEntity>> QueryAsync<TEntity>() where TEntity : MongoDocument;
 
-        Task InsertAsync<TEntity>(TEntity entity, InsertOneOptions? options = null) where TEntity : MongoDocument;
+        Task<Either<Error, IEnumerable<TEntity>>> FindAsync<TEntity>(Expression<Func<TEntity, bool>> filter, FindOptions? options = null, SortDefinition<TEntity>? sort = null) where TEntity : MongoDocument;
 
-        Task<bool> AtualizarAsync<TEntity>(Expression<Func<TEntity, bool>> filtro, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument;
+        Task<Either<Error, bool>> InsertAsync<TEntity>(TEntity entity, InsertOneOptions? options = null) where TEntity : MongoDocument;
 
-        Task<bool> RemoverAsync<TEntity>(Expression<Func<TEntity, bool>> filtro) where TEntity : MongoDocument;
+        Task<Either<Error, bool>> UpdateAsync<TEntity>(Expression<Func<TEntity, bool>> filtro, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument;
+
+        Task<Either<Error, bool>> DeleteAsync<TEntity>(Expression<Func<TEntity, bool>> filtro) where TEntity : MongoDocument;
     }
 }
