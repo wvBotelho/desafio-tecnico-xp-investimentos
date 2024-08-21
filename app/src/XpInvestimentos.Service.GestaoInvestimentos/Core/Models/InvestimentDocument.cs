@@ -1,9 +1,10 @@
+using Core.CustomAttributes;
 using Core.Enum;
-using Core.Interfaces;
 
 namespace Core.Models
 {
-    public class InvestimentDocument : MongoDocument
+    [CollectionName("produto_investimento")]
+    public record InvestimentDocument : MongoDocument
     {
         public required string Name { get; set; }
 
@@ -16,7 +17,5 @@ namespace Core.Models
         public decimal InterestRate { get; set; }
 
         public decimal Price { get; set; }
-
-        public bool IsActive { get; set; } = true;
     }
 }

@@ -1,9 +1,8 @@
 using Core.Enum;
-using Core.Interfaces;
 
 namespace Core.Models
 {
-    public class InvestorDocument : MongoDocument
+    public record InvestorDocument : MongoDocument
     {
         public required string FirstName { get; set; }
 
@@ -12,7 +11,5 @@ namespace Core.Models
         public required string Email { get; set; }
 
         public ProfileType Profile { get; set; }
-
-        public bool IsActive { get; set; }
     }
 }

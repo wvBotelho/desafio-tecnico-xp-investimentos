@@ -1,9 +1,8 @@
 using Core.Enum;
-using Core.Interfaces;
 
 namespace Core.Models
 {
-    public class TransactionDocument : MongoDocument
+    public record TransactionDocument : MongoDocument
     {
         public required Investment Product { get; set; }
 
@@ -16,7 +15,7 @@ namespace Core.Models
         public DateTime DateTransaction { get; set; }
     }
 
-    public class Investment
+    public record Investment
     {
         public Guid Id { get; set; }
 
@@ -25,7 +24,7 @@ namespace Core.Models
         public decimal Price { get; set; }
     }
 
-    public class Client 
+    public record Client 
     {
         public Guid Id { get; set; }
 

@@ -1,6 +1,6 @@
-namespace Core.Interfaces
+namespace Core.Models
 {
-    public class MongoDocument
+    public abstract record MongoDocument
     {
         public Guid Id { get; set; }
 
@@ -8,9 +8,11 @@ namespace Core.Interfaces
 
         public Guid? UpdatedBy { get; set; }
 
-        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public DateTime? UpdatedAt { get; set; }
+
+        public bool IsActive { get; set; } = true;
 
         public int Version { get; set; } = 1;
     }
