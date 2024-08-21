@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Core.Contracts;
 using Core.Errors;
+using Core.Models;
 using MongoDB.Driver;
 
 namespace Core.Interfaces
@@ -13,7 +14,9 @@ namespace Core.Interfaces
 
         Task<Either<Error, bool>> InsertAsync<TEntity>(TEntity entity, InsertOneOptions? options = null) where TEntity : MongoDocument;
 
-        Task<Either<Error, bool>> UpdateAsync<TEntity>(Expression<Func<TEntity, bool>> filtro, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument;
+        Task<Either<Error, bool>> UpdateAsync<TEntity>(Expression<Func<TEntity, bool>> filter, UpdateDefinition<TEntity> update, UpdateOptions? options = null) where TEntity : MongoDocument;
+
+        Task<Either<Error, bool>> ReplaceAsync<TEntity>(Expression<Func<TEntity, bool>> filtro, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument;
 
         Task<Either<Error, bool>> DeleteAsync<TEntity>(Expression<Func<TEntity, bool>> filtro) where TEntity : MongoDocument;
     }
