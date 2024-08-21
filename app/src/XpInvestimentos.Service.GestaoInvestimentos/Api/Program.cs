@@ -1,9 +1,29 @@
+using Api.Middlewares;
+using Core.Interfaces;
+using Hangfire;
+using IOC.InjectionDependency;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", false, true)
+    .AddEnvironmentVariables()
+    .Build();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.RegisterMongoDb(config);
+
+builder.Services.RegisterAutomapper();
+
+builder.Services.RegisterApplicationServices(config);
+
+builder.Services.RegisterHangFire();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -14,31 +34,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHangfireDashboard();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapControllers();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+IEmailDeliveryService service = app.Services.GetService<IEmailDeliveryService>()!;
+
+RecurringJob.AddOrUpdate("daily-email-job", () => service.SendDailyNotification(), Cron.Daily);
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
