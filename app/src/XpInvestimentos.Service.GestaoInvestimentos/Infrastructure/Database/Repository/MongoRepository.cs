@@ -2,16 +2,16 @@ using System.Linq.Expressions;
 using Core.Contracts;
 using Core.Errors;
 using Core.Interfaces;
+using Core.Models;
 using MongoDB.Driver;
-using NLog;
-
+ 
 namespace Infrastructure.Database.Repository
 {
-    public class MongoRepository(IMongoContext context, ILogger logger): IMongoRepository
+    public class MongoRepository(IMongoContext context, ILoggerGenerator logger): IMongoRepository
     {
         private readonly IMongoContext _context = context;
 
-        private readonly ILogger _logger = logger;
+        private readonly ILoggerGenerator _logger = logger;
 
         public Either<Error, IEnumerable<TEntity>> QueryAsync<TEntity>() where TEntity : MongoDocument
         {
@@ -23,7 +23,7 @@ namespace Infrastructure.Database.Repository
             }
             catch(Exception e)
             {
-                _logger.Warn("Erro ao executar a operação de busca no banco");
+                _logger.Error("Erro ao executar a operação de busca no banco", e);
 
                 return Failure<Error, IEnumerable<TEntity>>.Fail(MongoOperationError.MongoException("MongoRepository.QueryAsync", e));
             }
@@ -43,7 +43,7 @@ namespace Infrastructure.Database.Repository
             }
             catch(Exception e)
             {
-                _logger.Warn("Erro ao executar a operação de busca no banco");
+                _logger.Error("Erro ao executar a operação de busca no banco", e);
 
                 return Failure<Error, IEnumerable<TEntity>>.Fail(MongoOperationError.MongoException("MongoRepository.FindAsync", e));
             }
@@ -55,7 +55,7 @@ namespace Infrastructure.Database.Repository
             {
                 IndexKeysDefinition<TEntity> indexKey = Builders<TEntity>.IndexKeys.Ascending(entity => entity.Id);
 
-                CreateIndexOptions indexOptions = new CreateIndexOptions
+                CreateIndexOptions indexOptions = new()
                 {
                     Name = "entityIdKey",
                     Unique = true,
@@ -72,39 +72,55 @@ namespace Infrastructure.Database.Repository
             }
             catch(Exception e)
             {
-                _logger.Warn("Erro ao executar a operação insert no banco");
+                _logger.Error("Erro ao executar a operação insert no banco", e);
 
                 return Failure<Error, bool>.Fail(MongoOperationError.MongoException("MongoRepository.InsertAsync", e));
             }
         }
 
-        public async Task<Either<Error, bool>> UpdateAsync<TEntity>(Expression<Func<TEntity, bool>> filtro, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument
+        public async Task<Either<Error, bool>> UpdateAsync<TEntity>(Expression<Func<TEntity, bool>> filter, UpdateDefinition<TEntity> update, UpdateOptions? options = null) where TEntity : MongoDocument
         {
             try
             {
-                ReplaceOneResult resultado = await _context.Collection<TEntity>().ReplaceOneAsync(filtro, entity, options);
+                UpdateResult result = await _context.Collection<TEntity>().UpdateOneAsync(filter, update, options);
 
-                return Success<Error, bool>.Ok(resultado.IsAcknowledged && resultado.ModifiedCount > 0);
+                return Success<Error, bool>.Ok(result.IsAcknowledged && result.ModifiedCount > 0);
             }
             catch(Exception e)
             {
-                _logger.Warn("Erro ao executar a operação no banco");
+                _logger.Error("Erro ao executar a operação no banco", e);
+
+                return Failure<Error, bool>.Fail(MongoOperationError.MongoException("MongoRepository.UpdateAsync", e));
+            }
+        }
+
+        public async Task<Either<Error, bool>> ReplaceAsync<TEntity>(Expression<Func<TEntity, bool>> filter, TEntity entity, ReplaceOptions? options = null) where TEntity : MongoDocument
+        {
+            try
+            {
+                ReplaceOneResult result = await _context.Collection<TEntity>().ReplaceOneAsync(filter, entity, options);
+
+                return Success<Error, bool>.Ok(result.IsAcknowledged && result.ModifiedCount > 0);
+            }
+            catch(Exception e)
+            {
+                _logger.Error("Erro ao executar a operação no banco", e);
 
                 return Failure<Error, bool>.Fail(MongoOperationError.MongoException("MongoRepository.AtualizarAsync", e));
             }
         }
 
-        public async Task<Either<Error, bool>> DeleteAsync<TEntity>(Expression<Func<TEntity, bool>> filtro) where TEntity : MongoDocument
+        public async Task<Either<Error, bool>> DeleteAsync<TEntity>(Expression<Func<TEntity, bool>> filter) where TEntity : MongoDocument
         {
             try
             {
-                DeleteResult result = await _context.Collection<TEntity>().DeleteOneAsync(filtro);
+                DeleteResult result = await _context.Collection<TEntity>().DeleteOneAsync(filter);
 
                 return Success<Error, bool>.Ok(result.IsAcknowledged && result.DeletedCount > 0);
             }
             catch(Exception e)
             {
-                _logger.Warn("Erro ao executar a operação no banco");
+                _logger.Error("Erro ao executar a operação no banco", e);
 
                 return Failure<Error, bool>.Fail(MongoOperationError.MongoException("MongoRepository.RemoverAsync", e));
             }

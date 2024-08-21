@@ -6,7 +6,7 @@ using Core.Models;
 namespace Core.Mapper
 {
     [ExcludeFromCodeCoverage]
-    public class MapperConfiguration
+    public class MapperConfigure
     {
         public static void Configure(IMapperConfigurationExpression conf)
         {
